@@ -24,6 +24,7 @@ import android.animation.ValueAnimator;
 import android.app.ActivityManagerNative;
 import android.app.StatusBarManager;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -79,7 +80,7 @@ public class NavigationBarView extends LinearLayout {
      private OnTouchListener mRecentsPreloadListener;
      private OnTouchListener mHomeSearchActionListener;
      private OnLongClickListener mRecentsBackListener;
-     
+
     // slippery nav bar when everything is disabled, e.g. during setup
     final static boolean SLIPPERY_WHEN_DISABLED = true;
 
@@ -106,9 +107,18 @@ public class NavigationBarView extends LinearLayout {
     private DeadZone mDeadZone;
     private final NavigationBarTransitions mBarTransitions;
 
+    // Visibility of R.id.one view prior to swapping it for a left arrow key
+    public int mSlotOneVisibility = -1;
+
+    // Visibility of R.id.six view prior to swapping it for a right arrow key
+    public int mSlotSixVisibility = -1;
+
+
     // workaround for LayoutTransitions leaving the nav buttons in a weird state (bug 5549288)
     final static boolean WORKAROUND_INVALID_LAYOUT = true;
     final static int MSG_CHECK_INVALID_LAYOUT = 8686;
+
+    private boolean mShowDpadArrowKeys;
 
     // performs manual animation in sync with layout transitions
     private final NavTransitionListener mTransitionListener = new NavTransitionListener();
@@ -239,6 +249,7 @@ public class NavigationBarView extends LinearLayout {
         if (root != null) {
             root.setDrawDuringWindowsAnimating(true);
         }
+        mSettingsObserver.observe();
     }
 
     @Override
@@ -358,17 +369,40 @@ public class NavigationBarView extends LinearLayout {
 
         ((ImageView)getRecentsButton()).setImageDrawable(mVertical ? mRecentLandIcon : mRecentIcon);
 
-        final boolean showImeButton = ((hints & StatusBarManager.NAVIGATION_HINT_IME_SHOWN) != 0
-                    && !mImeArrowVisibility);
+        final boolean showImeButton = ((hints & StatusBarManager.NAVIGATION_HINT_IME_SHOWN) != 0)
+                                && !mShowDpadArrowKeys;
         getImeSwitchButton().setVisibility(showImeButton ? View.VISIBLE : View.INVISIBLE);
-
-        mIsImeArrowVisible = (backAlt && mImeArrowVisibility);
-
-        // Update menu button in case the IME state has changed.
-        setMenuVisibility(mShowMenu, true);
 
 
         setDisabledFlags(mDisabledFlags, true);
+
+        if (mShowDpadArrowKeys) { // overrides IME button
+            final boolean showingIme = ((mNavigationIconHints
+                    & StatusBarManager.NAVIGATION_HINT_BACK_ALT) != 0);
+
+            setVisibleOrGone(getCurrentView().findViewById(R.id.dpad_left), showingIme);
+            setVisibleOrGone(getCurrentView().findViewById(R.id.dpad_right), showingIme);
+
+            View one = getCurrentView().findViewById(mVertical ? R.id.six : R.id.one);
+            View six = getCurrentView().findViewById(mVertical ? R.id.one : R.id.six);
+            if (showingIme) {
+                mSlotOneVisibility = one.getVisibility();
+                mSlotSixVisibility = six.getVisibility();
+                setVisibleOrGone(one, false);
+                setVisibleOrGone(six, false);
+            } else {
+                if (mSlotOneVisibility != -1) {
+                    one.setVisibility(mSlotOneVisibility);
+                    mSlotOneVisibility = -1;
+                }
+                if (mSlotSixVisibility != -1) {
+                    six.setVisibility(mSlotSixVisibility);
+                    mSlotSixVisibility = -1;
+                }
+            }
+        }
+        // Update menu button in case the IME state has changed.
+        setMenuVisibility(mShowMenu, true);
     }
 
     public void setDisabledFlags(int disabledFlags) {
@@ -675,26 +709,29 @@ public class NavigationBarView extends LinearLayout {
         }
 
         void observe() {
-            mContext.getContentResolver().registerContentObserver(
-                    Settings.System.getUriFor(Settings.System.STATUS_BAR_IME_ARROWS),
-                    false, this);
+            ContentResolver resolver = getContext().getContentResolver();
+             resolver.registerContentObserver(
+                     Settings.System.getUriFor(Settings.System.NAVIGATION_BAR_MENU_ARROW_KEYS),
+                     false, this);
 
             onChange(false);
         }
 
         void unobserve() {
-            mContext.getContentResolver().unregisterContentObserver(this);
+            getContext().getContentResolver().unregisterContentObserver(this);
+
         }
 
         @Override
         public void onChange(boolean selfChange) {
-            mImeArrowVisibility =
-                    (Settings.System.getIntForUser(mContext.getContentResolver(),
-                            Settings.System.STATUS_BAR_IME_ARROWS, HIDE_IME_ARROW,
-                            UserHandle.USER_CURRENT) == SHOW_IME_ARROW);
+            mShowDpadArrowKeys = Settings.System.getInt(getContext().getContentResolver(),
+                    Settings.System.NAVIGATION_BAR_MENU_ARROW_KEYS, 0) != 0;
+            mSlotOneVisibility = -1;
+            mSlotSixVisibility = -1;
             setNavigationIconHints(mNavigationIconHints, true);
         }
     }
+
 
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
         pw.println("NavigationBarView {");
@@ -793,8 +830,16 @@ public class NavigationBarView extends LinearLayout {
 
     private void setButtonWithTagVisibility(Object tag, boolean visible) {
         View findView = mCurrentView.findViewWithTag(tag);
-        if (findView != null) {
-            findView.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
+        if (findView == null) {
+            return;
+        }
+        int visibility = visible ? View.VISIBLE : View.INVISIBLE;
+        if (mSlotOneVisibility != -1 && findView.getId() == R.id.one) {
+            mSlotOneVisibility = visibility;
+        } else if (mSlotSixVisibility != -1 && findView.getId() == R.id.six) {
+            mSlotSixVisibility = visibility;
+        } else {
+            findView.setVisibility(visibility);
         }
     }
 
