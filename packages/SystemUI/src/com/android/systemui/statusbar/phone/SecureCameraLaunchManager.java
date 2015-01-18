@@ -79,7 +79,8 @@ public class SecureCameraLaunchManager {
     // If the camera hardware hasn't become available after this period of time, the
     // SecureCameraLaunchManager launches the secure camera anyway.
     private static final int CAMERA_AVAILABILITY_TIMEOUT_MS = 1000;
-
+    public static final String CAMERA_LAUNCH_SOURCE_AFFORDANCE = "lockscreen_affordance";
+    
     private Context mContext;
     private Handler mHandler;
     private LockPatternUtils mLockPatternUtils;
@@ -108,7 +109,7 @@ public class SecureCameraLaunchManager {
             // cameras are still not available, we will get this callback again for those
             // cameras.
             if (mWaitingToLaunchSecureCamera && areAllCamerasAvailable()) {
-                mKeyguardBottomArea.launchCamera();
+                mKeyguardBottomArea.launchCamera(CAMERA_LAUNCH_SOURCE_AFFORDANCE);
                 mWaitingToLaunchSecureCamera = false;
 
                 // We no longer need to launch the camera after the timeout hits.
@@ -140,7 +141,7 @@ public class SecureCameraLaunchManager {
                 public void run() {
                     if (mWaitingToLaunchSecureCamera) {
                         Log.w(TAG, "Timeout waiting for camera availability");
-                        mKeyguardBottomArea.launchCamera();
+                        mKeyguardBottomArea.launchCamera(CAMERA_LAUNCH_SOURCE_AFFORDANCE);
                         mWaitingToLaunchSecureCamera = false;
                     }
                 }
@@ -191,7 +192,7 @@ public class SecureCameraLaunchManager {
     public void startSecureCameraLaunch() {
         if (DEBUG) Log.d(TAG, "startSecureCameraLunch");
         if (areAllCamerasAvailable() || targetWillWaitForCameraAvailable()) {
-            mKeyguardBottomArea.launchCamera();
+            mKeyguardBottomArea.launchCamera(CAMERA_LAUNCH_SOURCE_AFFORDANCE);
         } else {
             mWaitingToLaunchSecureCamera = true;
             mHandler.postDelayed(mLaunchCameraRunnable, CAMERA_AVAILABILITY_TIMEOUT_MS);
