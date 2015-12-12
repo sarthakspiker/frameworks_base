@@ -3785,9 +3785,6 @@ Settings.System.BATTERY_SAVER_MODE_COLOR),
         mNetworkController.removeSignalCallback(signalCluster);
         mNetworkController.removeSignalCallback(signalClusterKeyguard);
         mNetworkController.removeSignalCallback(signalClusterQs);
-        if (mQSPanel != null && mQSPanel.getHost() != null) {
-            mQSPanel.getHost().destroy();
-        }
     }
 
     private boolean mDemoModeAllowed;
