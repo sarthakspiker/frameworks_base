@@ -80,7 +80,9 @@ public class NavigationBarView extends LinearLayout {
      private OnTouchListener mRecentsPreloadListener;
      private OnTouchListener mHomeSearchActionListener;
      private OnLongClickListener mRecentsBackListener;
+     private OnLongClickListener mLongPressHomeListener;
 
+    private SettingsObserver mSettingsObserver;
     // slippery nav bar when everything is disabled, e.g. during setup
     final static boolean SLIPPERY_WHEN_DISABLED = true;
 
@@ -122,19 +124,6 @@ public class NavigationBarView extends LinearLayout {
     // workaround for LayoutTransitions leaving the nav buttons in a weird state (bug 5549288)
     final static boolean WORKAROUND_INVALID_LAYOUT = true;
     final static int MSG_CHECK_INVALID_LAYOUT = 8686;
-
-    final static String NAVBAR_EDIT_ACTION = "android.intent.action.NAVBAR_EDIT";
-
-    private boolean mInEditMode;
-    private NavbarEditor mEditBar;
-    private NavBarReceiver mNavBarReceiver;
-    private OnClickListener mRecentsClickListener;
-    private OnTouchListener mRecentsPreloadListener;
-    private OnTouchListener mHomeSearchActionListener;
-    private OnLongClickListener mRecentsBackListener;
-    private OnLongClickListener mLongPressHomeListener;
-
-    private SettingsObserver mSettingsObserver;
     
     private boolean mShowDpadArrowKeys;
 
@@ -147,8 +136,6 @@ public class NavigationBarView extends LinearLayout {
     private boolean mWakeAndUnlocking;
 
     private GestureDetector mDoubleTapGesture;
-
-    private SettingsObserver mSettingsObserver;
 
     private class NavTransitionListener implements TransitionListener {
         private boolean mBackTransitioning;
