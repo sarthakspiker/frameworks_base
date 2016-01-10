@@ -110,6 +110,7 @@ import android.widget.TextView;
 import com.android.internal.logging.MetricsLogger;
 import com.android.internal.statusbar.NotificationVisibility;
 import com.android.internal.statusbar.StatusBarIcon;
+import com.android.internal.util.cm.ActionUtils;
 import com.android.keyguard.KeyguardHostView.OnDismissAction;
 import com.android.keyguard.KeyguardUpdateMonitor;
 import com.android.keyguard.ViewMediatorCallback;
@@ -426,7 +427,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
                     Settings.System.STATUS_BAR_CUSTOM_HEADER_DEFAULT), 
                     false, this, UserHandle.USER_ALL);
             resolver.registerContentObserver(Settings.System.getUriFor(
-Settings.Secure.RECENTS_LONG_PRESS_ACTIVITY), false, this);
+Settings.System.RECENTS_LONG_PRESS_ACTIVITY), false, this);
             update();
         }
 
@@ -4339,8 +4340,8 @@ Settings.Secure.RECENTS_LONG_PRESS_ACTIVITY), false, this);
             updateCustomRecentsLongPressCandidates();
         }
 
-        String componentString = Settings.Secure.getString(mContext.getContentResolver(),
-                Settings.Secure.RECENTS_LONG_PRESS_ACTIVITY);
+        String componentString = Settings.System.getString(mContext.getContentResolver(),
+                Settings.System.RECENTS_LONG_PRESS_ACTIVITY);
         if (componentString == null) {
             mCustomRecentsLongPressHandler = null;
             return;

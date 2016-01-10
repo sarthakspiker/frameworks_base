@@ -3804,6 +3804,13 @@ public class Intent implements Parcelable, Cloneable {
     public static final String EXTRA_RECENTS_LONG_PRESS_RELEASE =
             "android.intent.extra.RECENTS_LONG_PRESS_RELEASE";
 
+    /**
+     * Extra for {@link #ACTION_RECENTS_LONG_PRESS} that provides the package name of the
+     * app in foreground when recents was long pressed. Can be reused for other purposes.
+     * @hide
+     */
+    public static final String EXTRA_CURRENT_PACKAGE_NAME =
+            "com.cyanogenmod.intent.extra.CURRENT_PACKAGE_NAME";
  
     /**
      * Optional boolean extra for {@link #ACTION_TIME_CHANGED} that indicates the
