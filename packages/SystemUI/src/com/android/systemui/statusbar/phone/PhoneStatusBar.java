@@ -459,6 +459,9 @@ Settings.System.RECENTS_LONG_PRESS_ACTIVITY), false, this);
             resolver.registerContentObserver(Settings.System.getUriFor(
 Settings.System.BATTERY_SAVER_MODE_COLOR),
                     false, this, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.Secure.getUriFor(
+                    Settings.Secure.QS_NUM_TILE_COLUMNS), false, this,
+                    UserHandle.USER_ALL);
             update();
         }
 
@@ -583,6 +586,10 @@ Settings.System.BATTERY_SAVER_MODE_COLOR),
             }
             if (mIconPolicy != null) {
                 mIconPolicy.setCurrentUserSetup(mUserSetup);
+            }
+
+            if (mQSPanel != null) {
+                mQSPanel.updateNumColumns();
             }
         }
     };
